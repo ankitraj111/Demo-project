@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>User Management - Pro Level CRUD</title>
+<script src="app.js" defer></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #e0e7ff, #f3f4f6);
+    margin: 0; padding: 0;
+    color: #2a374f;
+    display: flex; justify-content: center; align-items: flex-start;
+    min-height: 100vh;
+    padding: 2.5rem 1.5rem;
+  }
+  .container {
+    background: #fff;
+    width: 100%; max-width: 640px;
+    padding: 2.5rem 3rem;
+    border-radius: 16px;
+    box-shadow: 0 25px 50px rgba(27,31,35,0.12);
+    backdrop-filter: blur(6px);
+    animation: fadeIn 0.4s ease-out;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px);} to { opacity: 1; transform:translateY(0);} }
+  
+  h1 {
+    font-weight: 700; margin-bottom: 2rem;
+    font-size: 2.5rem; letter-spacing: -0.02em;
+    text-align: center;
+    background: linear-gradient(90deg,#2563eb,#1e40af);
+    background-clip: text;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  
+  /* Form */
+  form#addUserForm {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 1rem; margin-bottom: 2rem;
+  }
+  form#addUserForm input {
+    padding: 0.75rem 1rem; font-size: 1rem;
+    border: 2px solid #d1d5db; border-radius: 8px;
+    transition: all 0.3s ease;
+  }
+  form#addUserForm input:focus {
+    outline: none; border-color: #2563eb;
+    box-shadow: 0 0 8px rgba(37,99,235,0.3);
+    transform: scale(1.015);
+  }
+  form#addUserForm button {
+    grid-column: 1 / span 2;
+    padding: 0.9rem; font-size: 1.1rem;
+    background: linear-gradient(90deg,#2563eb,#1d4ed8);
+    border: none; border-radius: 8px;
+    color: white; cursor: pointer;
+    font-weight: 600; transition: all 0.3s ease;
+  }
+  form#addUserForm button:hover { transform: translateY(-1px); filter: brightness(1.05); }
+  .error-message { color: #dc2626; font-size: 0.85rem; display: none; }
+
+  /* User List */
+  ul#userList {
+    list-style: none; padding: 0; margin: 0;
+    max-height: 360px; overflow-y: auto;
+    border-radius: 8px; box-shadow: inset 0 0 6px #ccc;
+  }
+  ul#userList li {
+    background: #f9fafb; border-bottom: 1px solid #e5e7eb;
+    padding: 1rem 1.25rem; display: flex;
+    justify-content: space-between; align-items: center;
+    animation: fadeIn 0.3s ease-out;
+  }
+  ul#userList li:hover { background-color: #eef2ff; }
+  .user-info { flex: 1; font-weight: 500; overflow: hidden; text-overflow: ellipsis; }
+
+  /* Buttons */
+  .btn-group button {
+    margin-left: 0.75rem; border-radius: 6px; border: none;
+    padding: 0.5rem 0.9rem; font-weight: 600; cursor: pointer;
+    color: white; font-size: 0.9rem; transition: transform 0.2s ease;
+  }
+  .btn-group button:hover { transform: scale(1.05); }
+  .edit-btn { background-color: #16a34a; }
+  .edit-btn:hover { background-color: #15803d; }
+  .delete-btn { background-color: #dc2626; }
+  .delete-btn:hover { background-color: #b91c1c; }
+
+  /* Modal */
+  #editModal {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0,0,0,0.45);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 1000; opacity: 0; pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  #editModal.active { opacity: 1; pointer-events: auto; }
+  .modal-content {
+    background: white; border-radius: 12px;
+    box-shadow: 0 20px 50px rgba(27,31,35,0.15);
+    max-width: 480px; width: 90%; padding: 2rem 2.5rem;
+    animation: scaleIn 0.3s ease;
+  }
+  @keyframes scaleIn { from { transform: scale(0.95);} to { transform: scale(1);} }
+  .modal-content h2 {
+    font-weight: 700; font-size: 1.75rem; margin-bottom: 1.5rem; text-align: center;
+  }
+  .modal-content input {
+    width: 100%; padding: 0.75rem 1rem; font-size: 1rem;
+    border: 1.8px solid #d1d5db; border-radius: 8px;
+    margin-bottom: 1.3rem; transition: all 0.3s ease;
+  }
+  .modal-content input:focus {
+    border-color: #2563eb; box-shadow: 0 0 6px rgba(37,99,235,0.3);
+  }
+  .modal-buttons { display: flex; justify-content: flex-end; gap: 1rem; }
+  .modal-buttons button {
+    padding: 0.7rem 1.5rem; font-weight: 700; border-radius: 8px;
+    border: none; cursor: pointer; font-size: 1rem; transition: all 0.3s;
+  }
+  .save-btn { background-color: #2563eb; color: white; }
+  .save-btn:hover { background-color: #1e40af; }
+  .cancel-btn { background-color: #9ca3af; color: white; }
+  .cancel-btn:hover { background-color: #6b7280; }
+
+  /* Toast Notification */
+  #toast {
+    position: fixed; bottom: 1.5rem; right: 1.5rem;
+    background-color: #2563eb; color: white;
+    padding: 0.75rem 1.2rem; border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    transform: translateY(50px); opacity: 0;
+    transition: all 0.4s ease;
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }
+</style>
+</head>
+<body>
+
+<main class="container">
+  <h1>User Management Dashboard</h1>
+
+  <form id="addUserForm" novalidate>
+    <input id="name" name="name" type="text" placeholder="Full Name" autocomplete="off" />
+    <input id="email" name="email" type="email" placeholder="Email Address" autocomplete="off" />
+    <button type="submit">Add User</button>
+    <p id="formError" class="error-message"></p>
+  </form>
+
+  <ul id="userList"></ul>
+</main>
+
+<!-- Edit Modal -->
+<div id="editModal">
+  <div class="modal-content">
+    <h2>Edit User</h2>
+    <input id="editName" type="text" autocomplete="off" />
+    <input id="editEmail" type="email" autocomplete="off" />
+    <div class="modal-buttons">
+      <button class="save-btn">Save</button>
+      <button class="cancel-btn">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const apiUrl = "http://localhost:8080/api/users";
+
+const nameInput = document.getElementById('name');
+const emailInput = document.getElementById('email');
+const form = document.getElementById('addUserForm');
+const formError = document.getElementById('formError');
+const userList = document.getElementById('userList');
+
+const editModal = document.getElementById('editModal');
+const editName = document.getElementById('editName');
+const editEmail = document.getElementById('editEmail');
+const saveBtn = editModal.querySelector('.save-btn');
+const cancelBtn = editModal.querySelector('.cancel-btn');
+const toast = document.getElementById('toast');
+
+let editingUserId = null;
+
+function showToast(message, color="#2563eb") {
+  toast.textContent = message;
+  toast.style.backgroundColor = color;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+function validateEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function clearFormError() {
+  formError.style.display = 'none';
+  formError.textContent = '';
+}
+
+function setFormError(message) {
+  formError.textContent = message;
+  formError.style.display = 'block';
+}
+
+function loadUsers() {
+  fetch(apiUrl)
+    .then(resp => resp.json())
+    .then(users => {
+      userList.innerHTML = '';
+      users.forEach(user => {
+        const li = document.createElement('li');
+        const userInfo = document.createElement('span');
+        userInfo.classList.add('user-info');
+        userInfo.textContent = `${user.name} (${user.email})`;
+        li.appendChild(userInfo);
+
+        const btnGroup = document.createElement('div');
+        btnGroup.className = 'btn-group';
+
+        const editBtn = document.createElement('button');
+        editBtn.className = 'edit-btn';
+        editBtn.textContent = "Edit";
+        editBtn.onclick = () => openEditModal(user);
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-btn';
+        deleteBtn.textContent = "Delete";
+        deleteBtn.onclick = () => {
+          if (confirm(`Delete user ${user.name}?`)) {
+            deleteUser(user.id);
+          }
+        };
+
+        btnGroup.appendChild(editBtn);
+        btnGroup.appendChild(deleteBtn);
+        li.appendChild(btnGroup);
+        userList.appendChild(li);
+      });
+    })
+    .catch(() => showToast("Error loading users", "#dc2626"));
+}
+
+function addUser(name, email) {
+  fetch(apiUrl, {
+    method: 'POST',
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, email })
+  }).then(() => {
+    loadUsers();
+    form.reset();
+    clearFormError();
+    showToast("User added successfully");
+  }).catch(() => showToast("Failed to add user", "#dc2626"));
+}
+
+form.addEventListener('submit', e => {
+  e.preventDefault();
+  clearFormError();
+  const name = nameInput.value.trim();
+  const email = emailInput.value.trim();
+  if (!name) { setFormError("Name is required."); return; }
+  if (!email || !validateEmail(email)) { setFormError("Invalid email."); return; }
+  addUser(name, email);
+});
+
+function openEditModal(user) {
+  editingUserId = user.id;
+  editName.value = user.name;
+  editEmail.value = user.email;
+  editModal.classList.add('active');
+  editName.focus();
+}
+
+cancelBtn.addEventListener('click', () => {
+  editingUserId = null;
+  editModal.classList.remove('active');
+});
+
+saveBtn.addEventListener('click', () => {
+  const name = editName.value.trim();
+  const email = editEmail.value.trim();
+  if (!name) { alert("Name cannot be empty."); return; }
+  if (!validateEmail(email)) { alert("Invalid email."); return; }
+  updateUser(editingUserId, name, email);
+  editingUserId = null;
+  editModal.classList.remove('active');
+});
+
+function updateUser(id, name, email) {
+  fetch(`${apiUrl}/${id}`, {
+    method: 'PUT',
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, email })
+  }).then(() => {
+    loadUsers();
+    showToast("User updated successfully");
+  }).catch(() => showToast("Failed to update user", "#dc2626"));
+}
+
+function deleteUser(id) {
+  fetch(`${apiUrl}/${id}`, { method: 'DELETE' })
+    .then(() => { loadUsers(); showToast("User deleted", "#dc2626"); })
+    .catch(() => showToast("Failed to delete user", "#b91c1c"));
+}
+
+window.addEventListener('keydown', evt => {
+  if (evt.key === "Escape" && editModal.classList.contains('active')) {
+    editingUserId = null;
+    editModal.classList.remove('active');
+  }
+});
+
+window.onload = loadUsers;
+</script>
+</body>
+</html>
