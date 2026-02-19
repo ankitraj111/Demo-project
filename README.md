@@ -15,3 +15,25 @@ python -m http.server 8000
 
 
  https://apache-maven-3.9.12-bin.zip
+
+
+Download करो - apache-maven-3.9.12-bin.zip
+
+Extract करो - किसी folder में (e.g., C:\Maven)
+
+Environment Variable set करो:
+
+System → Environment Variables → New
+Variable Name: M2_HOME
+Variable Value: C:\Maven\apache-maven-3.9.12 (जहाँ extract किया)
+Verify करो:
+
+mvn --version
+
+
+
+
+
+ Python -version
+
+
