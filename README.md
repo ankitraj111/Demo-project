@@ -11,3 +11,7 @@ cd $PSScriptRoot; python -m http.server 8000
 cd c:\Users\ankit\Downloads\Demo-project-main\Demo-project-main
 
 python -m http.server 8000
+
+
+
+ https://apache-maven-3.9.12-bin.zip
